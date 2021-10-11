@@ -1,0 +1,31 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/node:8.10
+    working_directory: ~/repo
+    steps:
+      - checkout
+      # 依存関係をダウンロードしてキャッシュ
+      - restore_cache:
+          keys:
+            - v1-dependencies-
+            # 完全一致が見つからない場合はフォールバックとして最新のキャッシュを使用
+            - v1-dependencies-
+      - run:
+          name: Serverless CLI と依存関係のインストール
+          command: |
+            sudo npm i -g serverless
+            npm install
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-
+      # テストの実行
+      - run:
+          name: カバレッジを指定したテストの実行
+          command: npm test --coverage
+      - run:
+          name: アプリケーションのデプロイ
+          command: sls deploy --stage pre
